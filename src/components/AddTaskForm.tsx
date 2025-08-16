@@ -4,10 +4,14 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ColumnType } from "@/types/types";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/store/store";
+import { addTask } from "@/store/boardSlice";
 
 export const AddTaskForm = ({ className }: { className?: string }) => {
 	const [taskText, setTaskText] = useState("");
 	const [selectedColumn, setSelectedColumn] = useState("todo");
+	const dispatch = useDispatch<AppDispatch>();
 
 	return (
 		<form
@@ -70,6 +74,7 @@ export const AddTaskForm = ({ className }: { className?: string }) => {
 						onClick={() => {
 							if (!taskText.trim()) return;
 							//addTask(taskText, selectedColumn);
+							dispatch(addTask({ text: taskText, status: selectedColumn as ColumnType }));
 							setTaskText("");
 							setSelectedColumn("todo");
 						}}

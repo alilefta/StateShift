@@ -1,30 +1,23 @@
 import type { Task } from "@/types/types";
 import { Column } from "./Column";
-import { v4 as uuidv4 } from "uuid";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { useState } from "react";
-
-// let todoTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-// ];
-
-// let inProgressTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-// ];
-
-// let doneTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-// ];
+import { useDispatch, useSelector } from "react-redux";
+import { type AppDispatch, type RootState } from "@/store/store";
+import { moveTask } from "@/store/boardSlice";
 
 export const Board = () => {
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-	const todoTasks: Task[] = [];
-	const inProgressTasks: Task[] = [];
-	const doneTasks: Task[] = [];
+	const dispatch = useDispatch<AppDispatch>();
+	// Select only the data this component needs.
+	const { todo, inProgress, done } = useSelector((state: RootState) => state.board.columns);
+	const tasks = useSelector((state: RootState) => state.board.tasks);
+
+	// Derive the full task objects from the IDs
+	const todoTasks = todo.map((id) => tasks[id].task);
+	const inProgressTasks = inProgress.map((id) => tasks[id].task);
+	const doneTasks = done.map((id) => tasks[id].task);
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event;
@@ -39,23 +32,24 @@ export const Board = () => {
 
 		if (!over) return;
 
-		// const activeId = String(active.id);
-		// const overId = String(over.id);
+		const activeId = String(active.id);
+		const overId = String(over.id);
 
 		// Find the task's current column
-		//const { column: fromColumn } = findTask(activeId);
+		const { column: fromColumn } = tasks[activeId];
 
 		// Get the destination column
 		const toColumn = over.data.current?.sortable?.containerId || over.id;
 
 		// Validate columns
-		//if (!fromColumn) return;
+		if (!fromColumn) return;
 		if (toColumn !== "todo" && toColumn !== "inProgress" && toColumn !== "done") return;
 
 		// Don't do anything if dropping the task on itself
-		//if (activeId === overId && fromColumn === toColumn) return;
+		if (activeId === overId && fromColumn === toColumn) return;
 
 		//moveTask(activeId, fromColumn, toColumn as ColumnType, overId === toColumn ? undefined : overId);
+		dispatch(moveTask({ taskId: activeId, toColumn, overId }));
 	};
 
 	const sensors = useSensors(
