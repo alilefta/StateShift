@@ -1,16 +1,16 @@
 import type { Task } from "../types/types";
-import { useBoardStore } from "@/store/useBoardStore";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useBoardContext } from "@/store/useBoardContext";
 
 interface TaskCardProps {
 	task: Task;
 }
 
 export const TaskCard = ({ task }: TaskCardProps) => {
-	const removeTask = useBoardStore((state) => state.deleteTask);
+	const { dispatch } = useBoardContext();
 
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: task.id,
@@ -42,7 +42,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
 				<Button {...listeners} size={"icon"} variant={"ghost"} className="cursor-move hover:bg-gray-100 transition-colors duration-200">
 					<Menu className="size-5" />
 				</Button>
-				<Button className="hover:bg-red-50 transition-colors duration-200" size={"icon"} variant={"ghost"} onClick={() => removeTask(task.id)}>
+				<Button className="hover:bg-red-50 transition-colors duration-200" size={"icon"} variant={"ghost"} onClick={() => dispatch({ type: "DELETE_TASK", payload: { taskId: task.id } })}>
 					<X className="text-red-500 hover:text-red-600" />
 				</Button>
 			</div>

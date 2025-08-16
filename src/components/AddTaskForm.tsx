@@ -3,13 +3,13 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useBoardStore } from "@/store/useBoardStore";
 import type { ColumnType } from "@/types/types";
+import { useBoardContext } from "@/store/useBoardContext";
 
 export const AddTaskForm = ({ className }: { className?: string }) => {
-	const addTask = useBoardStore((state) => state.addTask);
 	const [taskText, setTaskText] = useState("");
 	const [selectedColumn, setSelectedColumn] = useState<ColumnType>("todo");
+	const { dispatch } = useBoardContext();
 
 	return (
 		<form
@@ -71,7 +71,7 @@ export const AddTaskForm = ({ className }: { className?: string }) => {
 						type="button"
 						onClick={() => {
 							if (!taskText.trim()) return;
-							addTask(taskText, selectedColumn);
+							dispatch({ type: "ADD_TASK", payload: { text: taskText, status: selectedColumn } });
 							setTaskText("");
 							setSelectedColumn("todo");
 						}}

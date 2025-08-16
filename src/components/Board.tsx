@@ -1,16 +1,27 @@
-import { useBoardStore } from "@/store/useBoardStore";
 import { Column } from "./Column";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import type { ColumnType, Task } from "@/types/types";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useBoardContext } from "@/store/useBoardContext";
 
 export const Board = () => {
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
-	const todoTasks = useBoardStore((state) => state.columns.todo);
-	const inProgressTasks = useBoardStore((state) => state.columns.inProgress);
-	const doneTasks = useBoardStore((state) => state.columns.done);
-	const findTask = useBoardStore((state) => state.findTask);
-	const moveTask = useBoardStore((state) => state.moveTask);
+	const { boardState, dispatch } = useBoardContext();
+
+	const ref = useRef(dispatch);
+	const tasksIds = useMemo(() => boardState.tasks, [boardState.tasks]);
+
+	const todoTasks = useMemo(() => {
+		return boardState.columns.todo;
+	}, [boardState.columns.todo]);
+
+	const inProgressTasks = useMemo(() => {
+		return boardState.columns.inProgress;
+	}, [boardState.columns.inProgress]);
+
+	const doneTasks = useMemo(() => {
+		return boardState.columns.done;
+	}, [boardState.columns.done]);
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event;
@@ -29,7 +40,7 @@ export const Board = () => {
 		const overId = String(over.id);
 
 		// Find the task's current column
-		const { column: fromColumn } = findTask(activeId);
+		const { column: fromColumn } = tasksIds[activeId];
 
 		// Get the destination column
 		const toColumn = over.data.current?.sortable?.containerId || over.id;
@@ -41,7 +52,7 @@ export const Board = () => {
 		// Don't do anything if dropping the task on itself
 		if (activeId === overId && fromColumn === toColumn) return;
 
-		moveTask(activeId, fromColumn, toColumn as ColumnType, overId === toColumn ? undefined : overId);
+		ref.current({ type: "MOVE_TASK", payload: { taskId: activeId, toColumn: toColumn as ColumnType, overId: overId === toColumn ? undefined : overId } });
 	};
 
 	const sensors = useSensors(
