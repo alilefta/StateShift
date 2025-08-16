@@ -11,6 +11,6 @@ export interface BoardState {
 		[key: string]: { task: Task; column: ColumnType };
 	};
 	columns: {
-		[key in ColumnType]: Task[];
+		[key in ColumnType]: string[];
 	};
 }

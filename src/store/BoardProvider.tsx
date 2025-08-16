@@ -21,7 +21,7 @@ const reducer: Reducer<BoardState, BoardActions> = (prevState: BoardState, actio
 				...prevState,
 				columns: {
 					...prevState.columns,
-					[column]: [...prevState.columns[column], newTask],
+					[column]: [...prevState.columns[column], newTask.id],
 				},
 				tasks: {
 					...prevState.tasks,
@@ -39,7 +39,7 @@ const reducer: Reducer<BoardState, BoardActions> = (prevState: BoardState, actio
 
 			return {
 				...prevState,
-				columns: { ...prevState.columns, [column]: [...prevState.columns[column].filter((t) => t.id !== task.id)] },
+				columns: { ...prevState.columns, [column]: [...prevState.columns[column].filter((t) => t !== task.id)] },
 				tasks: {
 					...updatedTasks,
 				},
@@ -47,12 +47,11 @@ const reducer: Reducer<BoardState, BoardActions> = (prevState: BoardState, actio
 		}
 
 		case "UPDATE_TASK": {
-			const { task, column } = prevState.tasks[action.payload.taskId];
+			const { task } = prevState.tasks[action.payload.taskId];
 			if (!task) return { ...prevState };
 
 			return {
 				...prevState,
-				columns: { ...prevState.columns, [column]: [...prevState.columns[column].map((tk) => (tk.id === task.id ? { ...tk, text: action.payload.text } : tk))] },
 				tasks: { ...prevState.tasks, [task.id]: { task: { ...task, text: action.payload.text }, column: prevState.tasks[task.id].column } },
 			};
 		}
@@ -63,18 +62,18 @@ const reducer: Reducer<BoardState, BoardActions> = (prevState: BoardState, actio
 
 			if (!task) return { ...prevState };
 
-			const sourceColumn = [...prevState.columns[fromColumn].filter((tk) => tk.id !== taskId)];
+			const sourceColumn = [...prevState.columns[fromColumn].filter((tId) => tId !== taskId)];
 			const destinationColumn = [...prevState.columns[toColumn]];
 
 			if (overId) {
-				const overIndex = destinationColumn.findIndex((tk) => tk.id === overId);
+				const overIndex = destinationColumn.findIndex((tId) => tId === overId);
 				if (overIndex !== -1) {
-					destinationColumn.splice(overIndex, 0, task);
+					destinationColumn.splice(overIndex, 0, taskId);
 				} else {
-					destinationColumn.push(task);
+					destinationColumn.push(taskId);
 				}
 			} else {
-				destinationColumn.push(task);
+				destinationColumn.push(taskId);
 			}
 
 			return {

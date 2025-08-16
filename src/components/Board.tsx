@@ -8,20 +8,27 @@ export const Board = () => {
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
 	const { boardState, dispatch } = useBoardContext();
 
+	// The state from context is now normalized
+	const { tasks: tasksMap, columns } = boardState;
+
 	const ref = useRef(dispatch);
 	const tasksIds = useMemo(() => boardState.tasks, [boardState.tasks]);
 
-	const todoTasks = useMemo(() => {
-		return boardState.columns.todo;
-	}, [boardState.columns.todo]);
+	// ✅ DE-NORMALIZE THE DATA FOR RENDERING
+	// We use useMemo for performance. This calculation will only re-run if
+	// the tasksMap or the specific column's ID array changes.
+	const todoTasks: Task[] = useMemo(() => {
+		// Map over the array of IDs...
+		return columns.todo.map((taskId) => tasksMap[taskId].task); // ...and look up the full task object.
+	}, [columns.todo, tasksMap]);
 
-	const inProgressTasks = useMemo(() => {
-		return boardState.columns.inProgress;
-	}, [boardState.columns.inProgress]);
+	const inProgressTasks: Task[] = useMemo(() => {
+		return columns.inProgress.map((taskId) => tasksMap[taskId].task);
+	}, [columns.inProgress, tasksMap]);
 
-	const doneTasks = useMemo(() => {
-		return boardState.columns.done;
-	}, [boardState.columns.done]);
+	const doneTasks: Task[] = useMemo(() => {
+		return columns.done.map((taskId) => tasksMap[taskId].task);
+	}, [columns.done, tasksMap]);
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event;
