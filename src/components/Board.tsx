@@ -1,89 +1,84 @@
 import type { Task } from "@/types/types";
 import { Column } from "./Column";
 import { v4 as uuidv4 } from "uuid";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
+import { useState } from "react";
 
-let todoTasks: Task[] = [
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-];
+// let todoTasks: Task[] = [
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
+// ];
 
-let inProgressTasks: Task[] = [
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-];
+// let inProgressTasks: Task[] = [
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
+// ];
 
-let doneTasks: Task[] = [
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-];
+// let doneTasks: Task[] = [
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
+// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
+// ];
 
 export const Board = () => {
-	const handleDragEnd = (event: DragEndEvent) => {
-		if (event.over && event.over.id === "Todo") {
-			// const taskId = event.active.id;
-			// const targetCol = "todo";
-			// let fromCol = "";
-			const taskInProgressCol = inProgressTasks.find((task) => task.id === event.active.id);
-			if (taskInProgressCol) {
-				// fromCol = "in-progress";
-				taskInProgressCol.status = "todo";
-				todoTasks = [...todoTasks, taskInProgressCol];
-				inProgressTasks.filter((task) => task.id !== taskInProgressCol.id);
-			}
-			const taskInDoneCol = doneTasks.find((task) => task.id === event.active.id);
-			if (taskInDoneCol) {
-				// fromCol = "done";
-				taskInDoneCol.status = "todo";
-				todoTasks = [...todoTasks, taskInDoneCol];
-				doneTasks.filter((task) => task.id !== taskInDoneCol.id);
-			}
+	const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-			// console.log("fromCol:", fromCol);
-		} else if (event.over && event.over.id === "In-progress") {
-			const taskInTodoCol = todoTasks.find((task) => task.id === event.active.id);
+	const todoTasks: Task[] = [];
+	const inProgressTasks: Task[] = [];
+	const doneTasks: Task[] = [];
 
-			if (taskInTodoCol) {
-				taskInTodoCol.status = "in-progress";
-				inProgressTasks = [...inProgressTasks, taskInTodoCol];
-				todoTasks.filter((task) => task.id !== taskInTodoCol.id);
-				return;
-			}
-
-			const taskInDoneCol = doneTasks.find((task) => task.id === event.active.id);
-			if (taskInDoneCol) {
-				taskInDoneCol.status = "in-progress";
-				inProgressTasks = [...inProgressTasks, taskInDoneCol];
-				doneTasks.filter((task) => task.id !== taskInDoneCol.id);
-				return;
-			}
-		} else if (event.over && event.over.id === "Done") {
-			const taskInTodoCol = todoTasks.find((task) => task.id === event.active.id);
-
-			if (taskInTodoCol) {
-				taskInTodoCol.status = "done";
-				doneTasks = [...doneTasks, taskInTodoCol];
-				todoTasks.filter((task) => task.id !== taskInTodoCol.id);
-				return;
-			}
-
-			const taskInProgressCol = inProgressTasks.find((task) => task.id === event.active.id);
-			if (taskInProgressCol) {
-				taskInProgressCol.status = "done";
-				doneTasks = [...doneTasks, taskInProgressCol];
-				inProgressTasks.filter((task) => task.id !== taskInProgressCol.id);
-				return;
-			}
-		}
+	const handleDragStart = (event: DragStartEvent) => {
+		const { active } = event;
+		const { task } = active.data.current as { task: Task };
+		setActiveTask(task);
 	};
 
+	const handleDragEnd = (event: DragEndEvent) => {
+		setActiveTask(null);
+
+		const { active, over } = event;
+
+		if (!over) return;
+
+		// const activeId = String(active.id);
+		// const overId = String(over.id);
+
+		// Find the task's current column
+		//const { column: fromColumn } = findTask(activeId);
+
+		// Get the destination column
+		const toColumn = over.data.current?.sortable?.containerId || over.id;
+
+		// Validate columns
+		//if (!fromColumn) return;
+		if (toColumn !== "todo" && toColumn !== "inProgress" && toColumn !== "done") return;
+
+		// Don't do anything if dropping the task on itself
+		//if (activeId === overId && fromColumn === toColumn) return;
+
+		//moveTask(activeId, fromColumn, toColumn as ColumnType, overId === toColumn ? undefined : overId);
+	};
+
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: {
+				distance: 8,
+			},
+		})
+	);
 	return (
-		<DndContext onDragEnd={handleDragEnd}>
-			<div className="board grid lg:grid-cols-3 gap-4 mx-5 grid-cols-1 md:grid-cols-2 my-2">
-				<Column tasks={todoTasks} title="Todo" className="bg-amber-500 text-neutral-100" />
-				<Column tasks={inProgressTasks} title="In-progress" className="bg-indigo-500 text-neutral-100" />
-				<Column tasks={doneTasks} title="Done" className="bg-emerald-500 text-neutral-100" />
+		<DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+			<div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 p-6 min-h-screen bg-gray-50">
+				<Column id="todo" tasks={todoTasks} title="Todo" className="bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg" />
+				<Column id="inProgress" tasks={inProgressTasks} title="In-progress" className="bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg" />
+				<Column id="done" tasks={doneTasks} title="Done" className="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg" />
 			</div>
+			<DragOverlay>
+				{activeTask ? (
+					<div className="bg-white rounded-lg shadow-2xl p-4 border border-gray-200 w-[300px]">
+						<p className="text-gray-700 text-lg font-medium line-clamp-2">{activeTask.text}</p>
+					</div>
+				) : null}
+			</DragOverlay>
 		</DndContext>
 	);
 };
