@@ -4,13 +4,13 @@ import { Header } from "./components/Header";
 
 function App() {
 	return (
-		<>
-			<div className="bg-gradient-to-b from-indigo-950 to-blue-900 h-full flex flex-col">
-				<Header className="sticky backdrop-blur-sm mt-4 mx-2 border border-gray-700 rounded-lg text-blue-400 px-3 py-2 " />
-				<AddTaskForm className="p-4 my-8 flex items-center justify-between w-1/2 mx-auto min-h-32 rounded-xl bg-gray-100 shadow-sm shadow-gray-100" />
+		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-violet-900">
+			<Header />
+			<main className="container mx-auto px-4 py-8">
+				<AddTaskForm className="mb-12 max-w-4xl mx-auto" />
 				<Board />
-			</div>
-		</>
+			</main>
+		</div>
 	);
 }
 
