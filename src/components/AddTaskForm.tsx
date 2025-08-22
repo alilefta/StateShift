@@ -2,12 +2,21 @@ import { useState, type FormEvent } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { v4 as uuidv4 } from "uuid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ColumnType } from "@/types/types";
+import type { ColumnType, Task } from "@/types/types";
+import { useSetAtom } from "jotai";
+import { doneAtom, inProgressAtom, tasksMapAtom, todoAtom } from "@/store/atoms";
 
 export const AddTaskForm = ({ className }: { className?: string }) => {
 	const [taskText, setTaskText] = useState("");
-	const [selectedColumn, setSelectedColumn] = useState("todo");
+	const [selectedColumn, setSelectedColumn] = useState<ColumnType>("todo");
+
+	const setTodos = useSetAtom(todoAtom);
+	const setInProgress = useSetAtom(inProgressAtom);
+	const setDone = useSetAtom(doneAtom);
+
+	const setTaskMapper = useSetAtom(tasksMapAtom);
 
 	return (
 		<form
@@ -69,7 +78,25 @@ export const AddTaskForm = ({ className }: { className?: string }) => {
 						type="button"
 						onClick={() => {
 							if (!taskText.trim()) return;
-							//addTask(taskText, selectedColumn);
+
+							const task: Task = {
+								id: uuidv4(),
+								text: taskText,
+							};
+
+							switch (selectedColumn) {
+								case "todo":
+									setTodos((prev) => [...prev, task.id]);
+									break;
+								case "inProgress":
+									setInProgress((prev) => [...prev, task.id]);
+									break;
+								case "done":
+									setDone((prev) => [...prev, task.id]);
+									break;
+							}
+
+							setTaskMapper((prev) => ({ ...prev, [task.id]: task }));
 							setTaskText("");
 							setSelectedColumn("todo");
 						}}

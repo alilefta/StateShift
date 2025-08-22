@@ -3,12 +3,15 @@ import type { Task } from "../types/types";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
 import { CSS } from "@dnd-kit/utilities";
+import { useSetAtom } from "jotai";
+import { removeTaskAtom } from "@/store/atoms";
 
 interface TaskCardProps {
 	task: Task;
 }
 
 export const TaskCard = ({ task }: TaskCardProps) => {
+	const removeTask = useSetAtom(removeTaskAtom);
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: task.id,
 		data: {
@@ -39,7 +42,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
 				<Button {...listeners} size={"icon"} variant={"ghost"} className="cursor-move hover:bg-gray-100 transition-colors duration-200">
 					<Menu className="size-5" />
 				</Button>
-				<Button className="hover:bg-red-50 transition-colors duration-200" size={"icon"} variant={"ghost"} onClick={() => {}}>
+				<Button className="hover:bg-red-50 transition-colors duration-200" size={"icon"} variant={"ghost"} onClick={() => removeTask({ taskId: task.id })}>
 					<X className="text-red-500 hover:text-red-600" />
 				</Button>
 			</div>

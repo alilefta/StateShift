@@ -1,36 +1,30 @@
-import type { Task } from "@/types/types";
+import type { ColumnType, Task } from "@/types/types";
 import { Column } from "./Column";
-import { v4 as uuidv4 } from "uuid";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
-import { useState } from "react";
-
-// let todoTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "todo" },
-// ];
-
-// let inProgressTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "in-progress" },
-// ];
-
-// let doneTasks: Task[] = [
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-// 	{ id: uuidv4(), title: "Learn React", text: "I want to learn React asap!", status: "done" },
-// ];
+import { useEffect, useState } from "react";
+import { doneAtom, getDoneTasksAtom, getInProgressTasksAtom, getTodoTasksAtom, inProgressAtom, moveTaskAtom, todoAtom } from "@/store/atoms";
+import { useAtom, useSetAtom } from "jotai";
 
 export const Board = () => {
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-	const todoTasks: Task[] = [];
-	const inProgressTasks: Task[] = [];
-	const doneTasks: Task[] = [];
+	const [todoTaskIds] = useAtom(todoAtom);
+	const [inProgressTaskIds] = useAtom(inProgressAtom);
+	const [doneTaskIds] = useAtom(doneAtom);
+
+	const [todoTasks] = useAtom(getTodoTasksAtom);
+	const [inProgressTasks] = useAtom(getInProgressTasksAtom);
+	const [doneTasks] = useAtom(getDoneTasksAtom);
+
+	const moveTask = useSetAtom(moveTaskAtom);
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event;
 		const { task } = active.data.current as { task: Task };
 		setActiveTask(task);
 	};
+
+	useEffect(() => {}, [todoTaskIds, inProgressTaskIds, doneTaskIds]);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		setActiveTask(null);
@@ -39,23 +33,27 @@ export const Board = () => {
 
 		if (!over) return;
 
-		// const activeId = String(active.id);
-		// const overId = String(over.id);
+		const activeId = String(active.id);
+		const overId = String(over.id);
 
 		// Find the task's current column
-		//const { column: fromColumn } = findTask(activeId);
+		const isTaskInTodo = todoTaskIds.find((id) => id === activeId);
+		const isTaskInInProgress = inProgressTaskIds.find((id) => id === activeId);
+		const isTaskInDone = doneTaskIds.find((id) => id === activeId);
+
+		const fromColumn = isTaskInTodo ? todoAtom : isTaskInInProgress ? inProgressAtom : isTaskInDone ? doneAtom : null;
 
 		// Get the destination column
 		const toColumn = over.data.current?.sortable?.containerId || over.id;
 
 		// Validate columns
-		//if (!fromColumn) return;
+		if (!fromColumn) return;
 		if (toColumn !== "todo" && toColumn !== "inProgress" && toColumn !== "done") return;
 
 		// Don't do anything if dropping the task on itself
-		//if (activeId === overId && fromColumn === toColumn) return;
+		if (activeId === overId && fromColumn === toColumn) return;
 
-		//moveTask(activeId, fromColumn, toColumn as ColumnType, overId === toColumn ? undefined : overId);
+		moveTask({ taskId: activeId, toColumn: toColumn as ColumnType, overId: overId === toColumn ? undefined : overId });
 	};
 
 	const sensors = useSensors(
